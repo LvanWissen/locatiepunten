@@ -28,16 +28,16 @@ qb = Namespace("http://purl.org/linked-data/cube#")
 hg = Namespace("http://rdf.histograph.io/")
 geo = Namespace("http://www.opengis.net/ont/geosparql#")
 
-lp = Namespace("https://resolver.clariah.org/hisgis/lp/")
-lpOnt = Namespace("https://resolver.clariah.org/hisgis/lp/ontology/")
-lpGeo = Namespace("https://resolver.clariah.org/hisgis/lp/geometry/")
-lpPlace = Namespace("https://resolver.clariah.org/hisgis/lp/place/")
+lp = Namespace("http://resolver.clariah.org/hisgis/lp/")
+lpOnt = Namespace("http://resolver.clariah.org/hisgis/lp/ontology/")
+lpGeo = Namespace("http://resolver.clariah.org/hisgis/lp/geometry/")
+lpPlace = Namespace("http://resolver.clariah.org/hisgis/lp/place/")
 
-lpAdres = Namespace("https://resolver.clariah.org/hisgis/lp/adres/")
-lpStraat = Namespace("https://resolver.clariah.org/hisgis/lp/straat/")
-lpBuurt = Namespace("https://resolver.clariah.org/hisgis/lp/buurt/")
-lpPerceel = Namespace("https://resolver.clariah.org/hisgis/lp/perceel/")
-lpSectie = Namespace("https://resolver.clariah.org/hisgis/lp/sectie/")
+lpAdres = Namespace("http://resolver.clariah.org/hisgis/lp/adres/")
+lpStraat = Namespace("http://resolver.clariah.org/hisgis/lp/straat/")
+lpBuurt = Namespace("http://resolver.clariah.org/hisgis/lp/buurt/")
+lpPerceel = Namespace("http://resolver.clariah.org/hisgis/lp/perceel/")
+lpSectie = Namespace("http://resolver.clariah.org/hisgis/lp/sectie/")
 
 label2adres = dict()
 
@@ -165,6 +165,9 @@ def getAdresResource(name, years, lps):
         else:
             label = f"{name} ({minYear}-{maxYear})"
 
+        # Get rid of the buurt in the prefLabel
+        prefLabel = re.sub(r'^[A-Z]{1,2} ', '', name)
+
         adres = Adres(
             uri,
             #   hasEarliestBeginTimeStamp=earliestBegin,
@@ -172,7 +175,7 @@ def getAdresResource(name, years, lps):
             hasEarliestEndTimeStamp=earliestEnd,
             #   hasLatestEndTimeStamp=latestEnd,
             label=label,
-            prefLabel=name)
+            prefLabel=prefLabel)
 
         label2adres[(uniqueLabel, years, lps)] = adres
 
@@ -237,7 +240,7 @@ def getAdres(adresData, label, point2wkt):
             if huisnummer := data['huisnummer']:
                 adres.huisnummer = huisnummer
             if huisnummertoevoeging := data['huisnummertoevoeging']:
-                adres.huisnummer = huisnummertoevoeging
+                adres.huisnummertoevoeging = huisnummertoevoeging
 
         if year in ['1876', '1853']:
 
@@ -302,6 +305,8 @@ def main(source, target, geometryfile='data/point2wkt.json'):
 
     g.add((lpOnt.Straat, OWL.equivalentClass, hg.Street))
     g.add((lpOnt.Buurt, OWL.equivalentClass, hg.Neighbourhood))
+
+    g.add((lpOnt.adres, OWL.equivalentProperty, schema.address))
 
     ########
     # Data #
