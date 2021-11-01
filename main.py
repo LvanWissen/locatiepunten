@@ -28,16 +28,16 @@ qb = Namespace("http://purl.org/linked-data/cube#")
 hg = Namespace("http://rdf.histograph.io/")
 geo = Namespace("http://www.opengis.net/ont/geosparql#")
 
-lp = Namespace("http://resolver.clariah.org/hisgis/lp/")
-lpOnt = Namespace("http://resolver.clariah.org/hisgis/lp/ontology/")
-lpGeo = Namespace("http://resolver.clariah.org/hisgis/lp/geometry/")
-lpPlace = Namespace("http://resolver.clariah.org/hisgis/lp/place/")
+lp = Namespace("https://resolver.clariah.org/hisgis/lp/")
+lpOnt = Namespace("https://resolver.clariah.org/hisgis/lp/ontology/")
+lpGeo = Namespace("https://resolver.clariah.org/hisgis/lp/geometry/")
+lpPlace = Namespace("https://resolver.clariah.org/hisgis/lp/place/")
 
-lpAdres = Namespace("http://resolver.clariah.org/hisgis/lp/adres/")
-lpStraat = Namespace("http://resolver.clariah.org/hisgis/lp/straat/")
-lpBuurt = Namespace("http://resolver.clariah.org/hisgis/lp/buurt/")
-lpPerceel = Namespace("http://resolver.clariah.org/hisgis/lp/perceel/")
-lpSectie = Namespace("http://resolver.clariah.org/hisgis/lp/sectie/")
+lpAdres = Namespace("https://resolver.clariah.org/hisgis/lp/adres/")
+lpStraat = Namespace("https://resolver.clariah.org/hisgis/lp/straat/")
+lpBuurt = Namespace("https://resolver.clariah.org/hisgis/lp/buurt/")
+lpPerceel = Namespace("https://resolver.clariah.org/hisgis/lp/perceel/")
+lpSectie = Namespace("https://resolver.clariah.org/hisgis/lp/sectie/")
 
 label2adres = dict()
 
@@ -137,7 +137,7 @@ def getResource(*args, ns):
     return ns.term(identifier)
 
 
-def getAdresResource(name, years, lps):
+def getAdresResource(name: str, years: tuple, lps):
     uniqueLabel = unidecode(name)
 
     name = name.replace('BUURT ', '').replace('SECTIE ', '')
@@ -165,8 +165,15 @@ def getAdresResource(name, years, lps):
         else:
             label = f"{name} ({minYear}-{maxYear})"
 
-        # Get rid of the buurt in the prefLabel
-        prefLabel = re.sub(r'^[A-Z]{1,2} ', '', name)
+        # Get rid of the buurt in the prefLabel for 1876
+        if "1876" in years:
+            prefLabel = re.sub(r'^[A-Z]{1,2} ', '', name)
+        else:
+            prefLabel = name
+
+        # Remove space in huisnummertoevoeging
+        # E.g. Bilderdijkstraat 9 a --> Bilderdijkstraat 9a
+        prefLabel = re.sub(r'(\d) ([a-z])$', r'\1\2', prefLabel)
 
         adres = Adres(
             uri,
@@ -256,7 +263,7 @@ def getAdres(adresData, label, point2wkt):
                 if buurtnummer := data['buurtnummer']:
                     adres.buurtnummer = buurtnummer
                 if buurtnummertoevoeging := data['buurtnummertoevoeging']:
-                    adres.buurtnummer = buurtnummertoevoeging
+                    adres.buurtnummertoevoeging = buurtnummertoevoeging
 
         if year in ['1832']:
 
@@ -267,7 +274,7 @@ def getAdres(adresData, label, point2wkt):
             perceelnummer = data['perceelnummer']
             perceelnummertoevoeging = data['perceelnummertoevoeging']
 
-            perceelLabel = " ".join([
+            perceelLabel = "".join([
                 str(i) for i in
                 [perceelsectie, perceelnummer, perceelnummertoevoeging] if i
             ])
